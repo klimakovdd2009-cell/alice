@@ -1,4 +1,3 @@
-# импортируем библиотеки
 import os
 from flask import Flask, request, jsonify
 import logging
@@ -40,6 +39,7 @@ def handle_dialog(req, res):
 
     if req['session']['new']:
         sessionStorage[user_id] = {
+            'stage': 'elephant',  # начальный этап — слон
             'suggests': [
                 "Не хочу.",
                 "Не буду.",
@@ -50,25 +50,50 @@ def handle_dialog(req, res):
         res['response']['buttons'] = get_suggests(user_id)
         return
 
-    if req['request']['original_utterance'].lower() in [
-        'ладно',
-        'куплю',
-        'покупаю',
-        'хорошо',
-        'Я покупаю',
-        'Я куплю'
-    ]:
-        res['response']['text'] = 'Слона можно найти на Яндекс.Маркете!'
-        res['response']['end_session'] = True
-        return
+    session = sessionStorage[user_id]
+    current_stage = session['stage']
 
-    res['response']['text'] = \
-        f"Все говорят '{req['request']['original_utterance']}', а ты купи слона!"
-    res['response']['buttons'] = get_suggests(user_id)
+    if current_stage == 'elephant':
+        if req['request']['original_utterance'].lower() in [
+            'ладно',
+            'куплю',
+            'покупаю',
+            'хорошо',
+            'я покупаю',
+            'я куплю'
+        ]:
+            res['response']['text'] = 'Слона можно найти на Яндекс.Маркете! А теперь купи кролика — они отлично ладят!'
+            session['stage'] = 'rabbit'  # переходим к этапу с кроликом
+            res['response']['buttons'] = get_suggests(user_id)
+            return
+        else:
+            res['response']['text'] = \
+                f"Все говорят '{req['request']['original_utterance']}', а ты купи слона!"
+            res['response']['buttons'] = get_suggests(user_id)
+    elif current_stage == 'rabbit':
+        if req['request']['original_utterance'].lower() in [
+            'ладно',
+            'куплю',
+            'покупаю',
+            'хорошо',
+            'я покупаю',
+            'я куплю'
+        ]:
+            res['response']['text'] = 'Кролика тоже можно найти на Яндекс.Маркете! Теперь у вас целая мини-зооферма! 😄 Хотите начать сначала?'
+            res['response']['buttons'] = [
+                {'title': 'Да, хочу!', 'hide': True},
+                {'title': 'Нет, спасибо', 'hide': True}
+            ]
+            return
+        else:
+            res['response']['text'] = \
+                f"Все говорят '{req['request']['original_utterance']}', а ты купи кролика!"
+            res['response']['buttons'] = get_suggests(user_id)
 
 
 def get_suggests(user_id):
     session = sessionStorage[user_id]
+    stage = session['stage']
 
     suggests = [
         {'title': suggest, 'hide': True}
@@ -79,16 +104,22 @@ def get_suggests(user_id):
     sessionStorage[user_id] = session
 
     if len(suggests) < 2:
-        suggests.append({
-            "title": "Ладно",
-            "url": "https://market.yandex.ru/search?text=слон",
-            "hide": True
-        })
+        if stage == 'elephant':
+            suggests.append({
+                "title": "Ладно",
+                "url": "https://market.yandex.ru/search?text=слон",
+                "hide": True
+            })
+        elif stage == 'rabbit':
+            suggests.append({
+                "title": "Ладно",
+                "url": "https://market.yandex.ru/search?text=кролик",
+                "hide": True
+            })
 
     return suggests
 
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 8000))
-    serve(app, host='0.0.0.0', port=port)
-    # app.run()
+    port = int(os.environ.get("PORT", 5000))
+    serve(app, host='127.0.0.1', port=port)
