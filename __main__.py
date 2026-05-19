@@ -58,7 +58,7 @@ def handle_dialog(req, res):
 
     user_utterance = req['request']['original_utterance'].lower().strip()
 
-    positive_keywords = ['куплю', 'покупаю']
+    positive_keywords = ['куплю', 'покупаю', 'хорошо', 'ладно']
 
     if any(keyword in user_utterance for keyword in positive_keywords):
         current_animal = session['current_animal']
