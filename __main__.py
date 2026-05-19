@@ -38,14 +38,20 @@ def main():
 def handle_dialog(req, res):
     user_id = req['session']['user_id']
 
-    if req['session']['new']:
+    if user_id not in sessionStorage:
         sessionStorage[user_id] = {
+            'current_animal': 'слон',
             'suggests': [
                 "Не хочу.",
                 "Не буду.",
                 "Отстань!",
             ]
         }
+
+    session = sessionStorage[user_id]
+
+    if req['session']['new']:
+        session['current_animal'] = 'слон'
         res['response']['text'] = 'Привет! Купи слона!'
         res['response']['buttons'] = get_suggests(user_id)
         return
@@ -55,12 +61,19 @@ def handle_dialog(req, res):
     positive_keywords = ['куплю', 'покупаю']
 
     if any(keyword in user_utterance for keyword in positive_keywords):
-        res['response']['text'] = 'Слона можно найти на Яндекс.Маркете!'
-        res['response']['end_session'] = True
+        current_animal = session['current_animal']
+        res['response']['text'] = f'{current_animal.capitalize()} можно найти на Яндекс.Маркете!\n\nА теперь купи кролика!'
+
+        session['current_animal'] = 'кролика'
+        sessionStorage[user_id] = session
+
+        res['response']['end_session'] = False
+        res['response']['buttons'] = get_suggests(user_id)
         return
 
+    current_animal = session['current_animal']
     res['response']['text'] = \
-        f"Все говорят '{req['request']['original_utterance']}', а ты купи слона!"
+        f"Все говорят '{req['request']['original_utterance']}', а ты купи {current_animal}!"
     res['response']['buttons'] = get_suggests(user_id)
 
 
