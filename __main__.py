@@ -50,19 +50,11 @@ def handle_dialog(req, res):
         res['response']['buttons'] = get_suggests(user_id)
         return
 
+    user_utterance = req['request']['original_utterance'].lower().strip()
 
-    if req['request']['original_utterance'].lower() in [
-        'ладно',
-        'куплю',
-        'покупаю',
-        'хорошо',
-        'я куплю',
-        'я покупаю',
-        'да, куплю',
-        'решил купить',
-        'согласен купить',
-        'давай куплю'
-    ]:
+    positive_keywords = ['куплю', 'покупаю', 'ладно', 'хорошо']
+
+    if any(keyword in user_utterance for keyword in positive_keywords):
         res['response']['text'] = 'Слона можно найти на Яндекс.Маркете!'
         res['response']['end_session'] = True
         return
