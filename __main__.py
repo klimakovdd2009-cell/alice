@@ -52,7 +52,7 @@ def handle_dialog(req, res):
 
     user_utterance = req['request']['original_utterance'].lower().strip()
 
-    positive_keywords = ['куплю', 'покупаю', 'ладно', 'хорошо']
+    positive_keywords = ['куплю', 'покупаю']
 
     if any(keyword in user_utterance for keyword in positive_keywords):
         res['response']['text'] = 'Слона можно найти на Яндекс.Маркете!'
